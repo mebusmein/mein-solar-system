@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLocalStorageState } from "ahooks";
+import { ring } from "astronomia/saturnring";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext();
 const SetThemeContext = createContext();
@@ -12,6 +14,7 @@ const defaultTheme = {
   marsColor: "#a63a1e", // Darker and softer red for Mars
   jupiterColor: "#b8864d", // Softer brown for Jupiter
   saturnColor: "#d4b45a", // Softer yellow for Saturn
+  ringColor: "#b5a38e", // Softer gray for Saturn's rings
   uranusColor: "#5fa8b0", // Softer cyan for Uranus
   neptuneColor: "#2e4e9b", // Darker and softer blue for Neptune
   lightColor: "#e0e0e0", // Softer white for light
@@ -29,6 +32,7 @@ const vintageTheme = {
   marsColor: "#b5651d",
   jupiterColor: "#d2a679",
   saturnColor: "#e3c16f",
+  ringColor: "#b5a38e",
   uranusColor: "#7fbfbf",
   neptuneColor: "#4682b4",
   lightColor: "#fdf5e6",
@@ -37,15 +41,21 @@ const vintageTheme = {
   ellipseColor: "#a9a9a9",
 };
 
+const themes = {
+  default: defaultTheme,
+  vintage: vintageTheme,
+};
+
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(defaultTheme);
+  const [store, setTheme] = useLocalStorageState("theme", "default");
+  const theme = themes[store] || defaultTheme;
 
   useEffect(() => {
     applyThemeToDOM(theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === defaultTheme ? vintageTheme : defaultTheme));
+    setTheme((prevTheme) => (prevTheme === "default" ? "vintage" : "default"));
   };
 
   return (
