@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+:root {
+  /* Define fallback values for CSS variables */
+  --background: #0c021f;
+  --sunColor: #ffdd00;
+  --mercuryColor: #b0b0b0;
+  --venusColor: #e3c16f;
+  --earthColor: #2a7de1;
+  --marsColor: #d14a28;
+  --jupiterColor: #d9a066;
+  --saturnColor: #f5d76e;
+  --uranusColor: #6fc2d0;
+  --neptuneColor: #3b6bd6;
+  --lightColor: #ffffff;
+  --textColorWebpage: #ffffff;
+  --textColorBillboards: #ffcc00;
+  --ellipseColor: #888888;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: unset;
+  background: var(--background);
+}
