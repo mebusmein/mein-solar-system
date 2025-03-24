@@ -4,20 +4,20 @@ const ThemeContext = createContext();
 const SetThemeContext = createContext();
 
 const defaultTheme = {
-  background: "#0c021f",
-  sunColor: "#ffdd00",
-  mercuryColor: "#b0b0b0",
-  venusColor: "#e3c16f",
-  earthColor: "#2a7de1",
-  marsColor: "#d14a28",
-  jupiterColor: "#d9a066",
-  saturnColor: "#f5d76e",
-  uranusColor: "#6fc2d0",
-  neptuneColor: "#3b6bd6",
-  lightColor: "#ffffff",
-  textColorWebpage: "#ffffff",
-  textColorBillboards: "#ffcc00",
-  ellipseColor: "#888888",
+  background: "#05010d", // Darker and softer background
+  sunColor: "#e6c200", // Softer yellow for the Sun
+  mercuryColor: "#8c8c8c", // Softer gray for Mercury
+  venusColor: "#c8a96b", // Softer beige for Venus
+  earthColor: "#1f5ba6", // Darker and softer blue for Earth
+  marsColor: "#a63a1e", // Darker and softer red for Mars
+  jupiterColor: "#b8864d", // Softer brown for Jupiter
+  saturnColor: "#d4b45a", // Softer yellow for Saturn
+  uranusColor: "#5fa8b0", // Softer cyan for Uranus
+  neptuneColor: "#2e4e9b", // Darker and softer blue for Neptune
+  lightColor: "#e0e0e0", // Softer white for light
+  textColorWebpage: "#e0e0e0", // Softer white for webpage text
+  textColorBillboards: "#e6b800", // Softer yellow for billboard text
+  ellipseColor: "#666666", // Softer gray for ellipses
 };
 
 const vintageTheme = {

@@ -10,7 +10,7 @@ function UI() {
     return (
         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 text-white pointer-events-auto">
+            <div className="flex items-center justify-between p-4 text-webpage pointer-events-auto">
                 <div>
                     <h1 className="text-2xl font-bold">Mein System</h1>
                     <p className="text-sm mt-1">Explore the locations and servers in the Mein solar system.</p>
@@ -18,12 +18,12 @@ function UI() {
                 <div className="relative">
                     <button
                         onClick={() => setDropdownOpen(!dropdownOpen)}
-                        className="text-white text-2xl focus:outline-none"
+                        className="text- text-2xl focus:outline-none"
                     >
                         <FaCog />
                     </button>
                     {dropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-40 bg-gray-800 text-white rounded shadow-lg">
+                        <div className="absolute right-0 mt-2 w-40 bg-gray-800 text-webpage rounded shadow-lg">
                             <button
                                 onClick={toggleTheme}
                                 className="block w-full text-left px-4 py-2 hover:bg-gray-700 rounded"
@@ -38,7 +38,7 @@ function UI() {
             <div className="flex flex-col items-center justify-center h-full"></div>
 
             {/* Footer */}
-            <footer className="p-4 flex justify-between items-center text-white text-sm pointer-events-auto">
+            <footer className="p-4 flex justify-between items-center text-webpage text-sm pointer-events-auto">
                 <span>&copy; {new Date().getFullYear()}</span>
                 <span>Made by Tim Mein</span>
             </footer>

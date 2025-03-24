@@ -12,7 +12,7 @@ function App() {
     return (
         <div className='h-full relative'>
             <SolarSystem selectedBody={selectedBody} setSelectedBody={setSelectedBody} />
-            <UI  />
+            <UI />
         </div>
     );
 }

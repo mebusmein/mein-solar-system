@@ -25,3 +25,19 @@ body,
   margin: unset;
   background: var(--background);
 }
+
+@theme {
+  --color-sun: var(--sunColor);
+  --color-mercury: var(--mercuryColor);
+  --color-venus: var(--venusColor);
+  --color-earth: var(--earthColor);
+  --color-mars: var(--marsColor);
+  --color-jupiter: var(--jupiterColor);
+  --color-saturn: var(--saturnColor);
+  --color-uranus: var(--uranusColor);
+  --color-neptune: var(--neptuneColor);
+  --color-light: var(--lightColor);
+  --color-webpage: var(--textColorWebpage);
+  --color-billboards: var(--textColorBillboards);
+  --color-ellipse: var(--ellipseColor);
+}
