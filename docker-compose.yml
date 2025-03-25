@@ -1,14 +1,24 @@
 version: "3.9"
 
+networks:
+  default:
+    external:
+      name: docker_default
 services:
   mein-solar-system:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: mein-solar-system
+    restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.mein-solar-system.rule=Host(`mein-solar-system.example.com`)"
+      - "traefik.http.routers.mein-solar-system.rule=Host(`system.saturn.mein.nl`)"
+      - "traefik.http.routers.mein-solar-system.entrypoints=websecure"
+      - "traefik.http.routers.mein-solar-system.tls=true"
+      - "traefik.http.routers.mein-solar-system.tls.certresolver=letencrypt"
       - "traefik.http.services.mein-solar-system.loadbalancer.server.port=80"
-    ports:
-      - "8080:80" # Optional: Expose locally for testing
+      - "glance.title=Mein Solar System"
+      - "glance.url=https://system.saturn.mein.nl"
+      - "glance.description=A interactive solar system"
+      - "glance.icon=si:planetscale"
