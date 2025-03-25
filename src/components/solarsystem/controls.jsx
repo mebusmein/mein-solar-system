@@ -7,7 +7,7 @@ import { Vector3 } from "three";
 import { speedInDaysPerSecond } from "./data";
 import { usePrevious } from "ahooks";
 
-const sunCameraPosition = [0, 20, 140];
+const sunCameraPosition = new Vector3(0, 20, 140);
 
 export default function Controls() {
   const focus = useFocus();
@@ -34,53 +34,53 @@ export default function Controls() {
     if (!focusRef.current) return;
     if (previousFocus?.data?.objectRef?.current === focusRef.current) return;
 
-    let futurePlanetPosition;
-    let lookAtPosition;
-    let cameraPosition;
+    // get the focus object's position
+    let focusObjectPosition = getObjectsPosition(focus);
+
+    // calculate the camera position based on the focus object
+    let lookAtPosition = focusObjectPosition;
+    let cameraPosition = sunCameraPosition;
     switch (focus.type) {
       case "planet":
-        futurePlanetPosition = getFuturePosition(
+        lookAtPosition = getFuturePosition(
           focus.data.xRadius,
           focus.data.zRadius,
           focus.data.daysPerRotation,
           focus.data.objectRef.current?.angle || 0,
           animationDuration,
         );
-        lookAtPosition = futurePlanetPosition;
         cameraPosition = calculatePlanetCameraPosition(
-          futurePlanetPosition,
+          lookAtPosition,
           focus.data.size,
-          [0, 0, 0],
+          new Vector3(0, 0, 0),
           focus.data.xRadius,
         );
         break;
+      case "moon":
+        cameraPosition = calculatePlanetCameraPosition(
+          lookAtPosition,
+          focus.parent.data.size,
+          focus.parent.data.objectRef.current.position,
+          focus.parent.data.xRadius,
+        );
+        break;
+      case "sun":
       default:
-        lookAtPosition = [0, 0, 0];
-        cameraPosition = sunCameraPosition;
     }
 
-    // set the focus position to the current objectRef's position
+    // start the camera animation
+    const previousFocusPosition = getObjectsPosition(previousFocus);
     api.start({
-      focusPosition: lookAtPosition,
-      cameraPosition: cameraPosition,
+      focusPosition: lookAtPosition.toArray(),
+      cameraPosition: cameraPosition.toArray(),
       from: {
-        focusPosition: [
-          previousFocus?.data?.objectRef.current.position.x || 0,
-          previousFocus?.data?.objectRef.current.position.y || 0,
-          previousFocus?.data?.objectRef.current.position.z || 0,
-        ],
-        cameraPosition: [
-          camera.position.x,
-          camera.position.y,
-          camera.position.z,
-        ],
+        focusPosition: previousFocusPosition.toArray() || [0, 0, 0],
+        cameraPosition: camera.position.toArray(),
       },
     });
   }, [focus]);
 
   useFrame(() => {
-    const planetCameraPosition = getCameraPosition(focus);
-
     if (focusRef.current) {
       if (springs.focusPosition.isAnimating) {
         const cameraPos = springs.cameraPosition.get();
@@ -89,16 +89,14 @@ export default function Controls() {
         const pos = springs.focusPosition.get();
         camera.lookAt(pos[0], pos[1], pos[2]);
       } else {
-        camera.position.set(
-          planetCameraPosition[0],
-          planetCameraPosition[1],
-          planetCameraPosition[2],
-        );
+        const cameraPosition = getCameraPosition(focus);
+        camera.position.copy(cameraPosition);
 
+        const focusObjectPosition = getObjectsPosition(focus);
         camera.lookAt(
-          focusRef.current.position.x,
-          focusRef.current.position.y,
-          focusRef.current.position.z,
+          focusObjectPosition.x,
+          focusObjectPosition.y,
+          focusObjectPosition.z,
         );
       }
     }
@@ -107,22 +105,80 @@ export default function Controls() {
   return;
 }
 
-const getCameraPosition = (focus) => {
+/**
+ * Retrieves the position of a celestial object (planet or moon) in the solar system.
+ *
+ * @param {Object} focus - The object to retrieve the position for.
+ * @param {string} focus.type - The type of the object, either "planet" or "moon".
+ * @param {Object} focus.data - The data associated with the object.
+ * @param {Object} focus.data.objectRef - A reference to the object's 3D representation.
+ * @param {Object} focus.data.objectRef.current - The current 3D object instance.
+ * @returns {Vector3} The position of the object. Returns (0, 0, 0) if the type is unrecognized.
+ */
+function getObjectsPosition(focus) {
+  if (focus.type === "planet") {
+    return focus.data.objectRef.current.position;
+  }
+  if (focus.type === "moon") {
+    const position = new Vector3();
+    focus.data.objectRef.current.getWorldPosition(position);
+    return position;
+  }
+  return new Vector3(0, 0, 0);
+}
+
+/**
+ * Calculates the camera position based on the given focus object.
+ *
+ * @param {Object} focus - The object to focus on.
+ * @param {string} focus.type - The type of the focus object (e.g., "planet").
+ * @param {Object} focus.data - Additional data related to the focus object.
+ * @param {Object} focus.data.objectRef - A reference to the 3D object.
+ * @param {Object} focus.data.objectRef.current - The current state of the object reference.
+ * @param {Object} focus.data.objectRef.current.position - The position of the object in 3D space.
+ * @param {number} focus.data.objectRef.current.position.x - The x-coordinate of the object's position.
+ * @param {number} focus.data.objectRef.current.position.y - The y-coordinate of the object's position.
+ * @param {number} focus.data.objectRef.current.position.z - The z-coordinate of the object's position.
+ * @param {number} focus.data.size - The size of the focus object.
+ * @param {number} focus.data.xRadius - The x-radius of the focus object.
+ * @returns {Vector3} The calculated camera position as a Vector3 object or a predefined position for the sun.
+ */
+function getCameraPosition(focus) {
   if (focus.type === "planet") {
     return calculatePlanetCameraPosition(
-      [
+      new Vector3(
         focus.data.objectRef.current.position.x,
         focus.data.objectRef.current.position.y,
         focus.data.objectRef.current.position.z,
-      ],
+      ),
       focus.data.size,
-      [0, 0, 0],
+      new Vector3(0, 0, 0),
       focus.data.xRadius,
     );
   }
-  return sunCameraPosition;
-};
+  if (focus.type === "moon") {
+    const moonPosition = getObjectsPosition(focus);
+    return calculatePlanetCameraPosition(
+      moonPosition,
+      focus.parent.data.size,
+      focus.parent.data.objectRef.current.position,
+      focus.parent.data.xRadius,
+    );
+  }
 
+  return new Vector3(...sunCameraPosition);
+}
+
+/**
+ * Calculates the camera position relative to a planet in a solar system simulation.
+ *
+ * @param {Vector3} planetPosition - The position of the planet in 3D space.
+ * @param {number} planetSize - The size (radius) of the planet.
+ * @param {Vector3} sunPosition - The position of the sun in 3D space.
+ * @param {number} orbitRadius - The radius of the planet's orbit.
+ * @param {number} [orbitAngleOffset=-0.2] - The angle offset (in radians) to shift the camera's position along the orbit.
+ * @returns {Vector3} The calculated camera position in 3D space.
+ */
 function calculatePlanetCameraPosition(
   planetPosition,
   planetSize,
@@ -133,47 +189,26 @@ function calculatePlanetCameraPosition(
   const distanceFromPlanet = planetSize * 5;
 
   // Calculate the direction vector from the sun to the planet
-  const direction = [
-    planetPosition[0] - sunPosition[0],
-    planetPosition[1] - sunPosition[1],
-    planetPosition[2] - sunPosition[2],
-  ];
-
-  // Normalize the direction vector
-  const magnitude = Math.sqrt(
-    direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2,
-  );
-  const normalizedDirection = direction.map(
-    (component) => component / magnitude,
-  );
+  const direction = new Vector3()
+    .subVectors(planetPosition, sunPosition)
+    .normalize();
 
   // Calculate the perpendicular direction for the orbit shift
-  const perpendicularDirection = [
-    -normalizedDirection[2], // Swap and negate components for perpendicular vector
+  const perpendicularDirection = new Vector3(
+    -direction.z, // Swap and negate components for perpendicular vector
     0,
-    normalizedDirection[0],
-  ];
-
-  // Normalize the perpendicular direction
-  const perpendicularMagnitude = Math.sqrt(
-    perpendicularDirection[0] ** 2 + perpendicularDirection[2] ** 2,
-  );
-  const normalizedPerpendicular = perpendicularDirection.map(
-    (component) => component / perpendicularMagnitude,
-  );
+    direction.x,
+  ).normalize();
 
   // Apply the orbit angle offset to shift the camera position
-  const shiftedPosition = [
-    planetPosition[0] +
-      normalizedDirection[0] * distanceFromPlanet +
-      normalizedPerpendicular[0] * orbitRadius * Math.sin(orbitAngleOffset),
-    planetPosition[1] +
-      normalizedDirection[1] * distanceFromPlanet +
-      2 * planetSize,
-    planetPosition[2] +
-      normalizedDirection[2] * distanceFromPlanet +
-      normalizedPerpendicular[2] * orbitRadius * Math.sin(orbitAngleOffset),
-  ];
+  const shiftedPosition = new Vector3()
+    .copy(planetPosition)
+    .addScaledVector(direction, distanceFromPlanet)
+    .addScaledVector(
+      perpendicularDirection,
+      orbitRadius * Math.sin(orbitAngleOffset),
+    )
+    .add(new Vector3(0, 2 * planetSize, 0)); // Adjust for vertical offset
 
   return shiftedPosition;
 }
@@ -185,7 +220,7 @@ function calculatePlanetCameraPosition(
  * @param {number} daysPerRotation - The number of days it takes for the celestial body to complete one rotation.
  * @param {number} currentAngle - The current angle of the celestial body in radians.
  * @param {number} timeMs - The time in milliseconds to calculate the future position for.
- * @returns {Array<number>} - The future position as a tuple [x, y, z].
+ * @returns {Vector3} - The future position as a Vector3 object.
  */
 function getFuturePosition(
   xRadius,
@@ -210,5 +245,5 @@ function getFuturePosition(
   const x = xRadius * Math.cos(newAngle);
   const z = zRadius * Math.sin(newAngle);
 
-  return [x, 0, z];
+  return new Vector3(x, 0, z);
 }

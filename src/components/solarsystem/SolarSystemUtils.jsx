@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BufferGeometry, Vector3 } from "three";
 import { animated, useSpring } from "@react-spring/three";
 import { Billboard, Text } from "@react-three/drei";
@@ -61,12 +61,19 @@ export function Label({ x, y, z, text, fontSize, hide }) {
     },
   );
 
+  const [demount, setDemount] = useState(hide);
   const springs = useSpring({
     opacity: hide ? 0 : 1,
+    onStart: () => {
+      setDemount(false);
+    },
+    onRest: () => {
+      setDemount(hide);
+    },
   });
 
   return (
-    <>
+    !demount && (
       <Billboard follow="true">
         <line geometry={lineGeometryRef.current}>
           <AnimatedLineBasicMaterial
@@ -91,6 +98,6 @@ export function Label({ x, y, z, text, fontSize, hide }) {
           {text}
         </AnimatedText>
       </Billboard>
-    </>
+    )
   );
 }

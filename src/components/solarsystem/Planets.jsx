@@ -101,9 +101,26 @@ function Moon({
   const orbitGroupRef = useRef(); // Group to apply inclination
   const moonAngleRef = useRef(0); // Initialize moon's angle
 
+  const { pushFocus } = useFocusUpdate(); // Add pushFocus
   const focus = useFocus();
   const isFocus = focus.type === "moon" && focus.data.name === name;
   const parentFocus = focus.type === "planet" && focus.data.name === planetName;
+
+  const onSelect = (e) => {
+    e.stopPropagation();
+    pushFocus({
+      type: "moon",
+      id: name, // Use moon's name as ID
+      data: {
+        name: name,
+        radius: radius,
+        size: size,
+        daysPerRotation: daysPerRotation,
+        inclination: inclination,
+        objectRef: moonRef,
+      },
+    });
+  };
 
   useFrame(() => {
     if (moonRef.current && planetRef.current) {
@@ -120,7 +137,10 @@ function Moon({
       ref={orbitGroupRef}
       rotation={[0, 0, (inclination * 10 * Math.PI) / 180]}
     >
-      <mesh ref={moonRef}>
+      <mesh
+        ref={moonRef}
+        onClick={onSelect} // Add onClick handler
+      >
         <sphereGeometry args={[size * 0.5, 32, 32]} />
         <meshStandardMaterial color="gray" />
         <Label
