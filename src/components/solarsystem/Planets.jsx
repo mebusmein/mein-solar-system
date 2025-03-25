@@ -5,6 +5,8 @@ import { useFocus, useFocusUpdate } from "../../libs/focus";
 import useHoverCursor from "../../libs/hooks/useHoverCursor.js";
 import { Ecliptic, Label } from "./SolarSystemUtils";
 import { speedInDaysPerSecond } from "./data.js";
+import { animated, useSpring } from "@react-spring/three";
+import { useLogListener } from "../../libs/prompt/commandCenter.jsx";
 
 export function Planet({
   planet: {
@@ -56,7 +58,8 @@ export function Planet({
         ((2 * Math.PI) / (daysPerRotation * 60)) * speedInDaysPerSecond; // Update angle
       const x = xRadius * Math.cos(angleRef.current);
       const z = zRadius * Math.sin(angleRef.current);
-      planetRef.current.position.set(x, 0, z); // Update position
+      const y = springs.yOffset.get();
+      planetRef.current.position.set(x, y, z); // Update position
 
       // Store the current angle in the objectRef for external use
       planetRef.current.angle = angleRef.current;
@@ -65,16 +68,40 @@ export function Planet({
 
   const color = theme[`${name.toLowerCase()}Color`] || theme.planetColor;
 
+  const [springs, api] = useSpring(() => ({
+    opacity: 0,
+    yOffset: 100,
+  }));
+
+  useLogListener("initializePlanet", async (payload) => {
+    return new Promise((resolve) => {
+      api.start({
+        opacity: 1,
+        yOffset: 0,
+        from: { opacity: 0, yOffset: 10 },
+        config: { duration: 700 },
+        onRest: () => {
+          resolve();
+        },
+      });
+    });
+  });
+
   return (
     <group ref={orbitGroupRef} rotation={[0, 0, (inclination * Math.PI) / 180]}>
-      <mesh
+      <animated.mesh
         ref={planetRef}
         onClick={onSelect}
         onPointerOver={(e) => setHovered(true)}
         onPointerOut={(e) => setHovered(false)}
+        position-y={springs.yOffset}
       >
         <sphereGeometry args={[size, 32, 32]} />
-        <meshStandardMaterial color={color} />
+        <animated.meshStandardMaterial
+          color={color}
+          opacity={springs.opacity}
+          transparent={true}
+        />
         {name.toLowerCase() === "saturn" && <Ring planetSize={size} />}
         {moons.map((moon) => (
           <Moon
@@ -85,7 +112,7 @@ export function Planet({
           />
         ))}
         <Label x={size} y={size} z={size} text={name} hide={planetFocus} />
-      </mesh>
+      </animated.mesh>
 
       <Ecliptic xRadius={xRadius} zRadius={zRadius} />
     </group>
@@ -122,13 +149,33 @@ function Moon({
     });
   };
 
+  const [springs, api] = useSpring(() => ({
+    opacity: 0,
+    yOffset: 100,
+  }));
+
+  useLogListener("initializeMoon", async (payload) => {
+    return new Promise((resolve) => {
+      api.start({
+        opacity: 1,
+        yOffset: 0,
+        from: { opacity: 0, yOffset: 10 },
+        config: { duration: 300 },
+        onRest: () => {
+          resolve();
+        },
+      });
+    });
+  });
+
   useFrame(() => {
     if (moonRef.current && planetRef.current) {
       moonAngleRef.current +=
         ((2 * Math.PI) / (daysPerRotation * 8 * 60)) * speedInDaysPerSecond; // Update moon's angle
       const x = radius * 1.8 * Math.cos(moonAngleRef.current);
       const z = radius * 1.8 * Math.sin(moonAngleRef.current);
-      moonRef.current.position.set(x, 0, z); // Update moon's position relative to the planet
+      const y = springs.yOffset.get();
+      moonRef.current.position.set(x, y, z); // Update moon's position relative to the planet
     }
   });
 
@@ -142,7 +189,11 @@ function Moon({
         onClick={onSelect} // Add onClick handler
       >
         <sphereGeometry args={[size * 0.5, 32, 32]} />
-        <meshStandardMaterial color="gray" />
+        <animated.meshStandardMaterial
+          color="gray"
+          opacity={springs.opacity}
+          transparent={true}
+        />
         <Label
           x={size * 0.5}
           y={size * 0.5}

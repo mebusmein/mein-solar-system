@@ -4,6 +4,7 @@ import { animated, useSpring } from "@react-spring/three";
 import { Billboard, Text } from "@react-three/drei";
 import { useTheme } from "../../libs/theme";
 import { useEventListener } from "ahooks";
+import { useLogListener } from "../../libs/prompt/commandCenter";
 
 export function Ecliptic({ xRadius = 1, zRadius = 1 }) {
   const theme = useTheme();
@@ -17,12 +18,32 @@ export function Ecliptic({ xRadius = 1, zRadius = 1 }) {
   }
   points.push(points[0]);
   const lineGeometry = new BufferGeometry().setFromPoints(points);
+
+  const [springs, api] = useSpring(() => ({
+    opacity: 0,
+  }));
+
+  useLogListener("initializePlanet", async (payload) => {
+    return new Promise((resolve) => {
+      api.start({
+        opacity: 1,
+        from: { opacity: 0 },
+        config: { duration: 700 },
+        onRest: () => {
+          resolve();
+        },
+      });
+    });
+  });
+
   return (
     <line geometry={lineGeometry}>
-      <lineBasicMaterial
+      <animated.lineBasicMaterial
         attach="material"
         color={theme.eclipticColor}
         linewidth={10}
+        opacity={springs.opacity}
+        transparent
       />
     </line>
   );
@@ -47,7 +68,6 @@ export function Label({ x, y, z, text, fontSize, hide }) {
   useEventListener(
     "synccomplete",
     () => {
-      console.log("synccomplete");
       const blockBounds = textRef.current.textRenderInfo.blockBounds;
       const width = blockBounds[2] - blockBounds[0];
       // Update the last point of the line

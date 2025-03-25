@@ -20,7 +20,7 @@ const defaultTheme = {
   lightColor: "#e0e0e0", // Softer white for light
   textColorWebpage: "#e0e0e0", // Softer white for webpage text
   textColorBillboards: "#e6b800", // Softer yellow for billboard text
-  ellipseColor: "#666666", // Softer gray for ellipses
+  ellipseColor: "#444444", // Softer gray for ellipses
 };
 
 const vintageTheme = {

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
 import { solPlanets } from "./data.js";
 import { useTheme } from "../../libs/theme";
 import Controls from "./controls";
@@ -8,6 +7,9 @@ import { Planet } from "./Planets";
 import { Ecliptic, Label } from "./SolarSystemUtils";
 import useHoverCursor from "../../libs/hooks/useHoverCursor.js";
 import { useFocusUpdate } from "../../libs/focus";
+import { useLogListener } from "../../libs/prompt/commandCenter.jsx";
+import { animated, useSpring } from "@react-spring/three";
+import { Stars } from "../../libs/three/Stars.jsx";
 
 function SolarSystem() {
   const theme = useTheme();
@@ -20,10 +22,12 @@ function SolarSystem() {
       ))}
       <Lights />
       <Controls />
-      <Stars radius={100} depth={50} count={5000} factor={3} saturation={0.8} />
+      <Stars radius={100} depth={50} count={5000} factor={2} saturation={0.8} />
     </Canvas>
   );
 }
+
+const AnimatedMesh = animated("mesh");
 
 function Sun({ color }) {
   const sunRef = useRef();
@@ -51,20 +55,43 @@ function Sun({ color }) {
 
   const [, setHovered] = useHoverCursor();
 
+  const [springs, api] = useSpring(() => ({
+    opacity: 0,
+    yOffset: 100,
+  }));
+
+  useLogListener("initializeSun", async (payload) => {
+    return new Promise((resolve) => {
+      api.start({
+        opacity: 1,
+        yOffset: 0,
+        from: { opacity: 0, yOffset: 10 },
+        config: { duration: 1000 },
+        onRest: () => {
+          console.log("Sun initialized", springs.yOffset.get());
+          resolve();
+        },
+      });
+    });
+  });
+
   return (
-    <mesh
+    <animated.mesh
       ref={sunRef}
       onClick={onSelect}
       onPointerOver={(e) => setHovered(true)}
       onPointerOut={(e) => setHovered(false)}
+      position-y={springs.yOffset}
     >
       <sphereGeometry args={[5, 32, 32]} />
-      <meshStandardMaterial
+      <animated.meshStandardMaterial
         emissive={color}
         emissiveIntensity={1.5}
         color={color}
+        opacity={springs.opacity}
+        transparent={true}
       />
-    </mesh>
+    </animated.mesh>
   );
 }
 
