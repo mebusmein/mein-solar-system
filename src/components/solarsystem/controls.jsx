@@ -36,43 +36,13 @@ export default function Controls() {
     if (previousFocus?.data?.objectRef?.current === focusRef.current) return;
 
     // get the focus object's position
+    const previousFocusPosition = getObjectsPosition(previousFocus);
     let focusObjectPosition = getObjectsPosition(focus);
-
-    // calculate the camera position based on the focus object
-    let lookAtPosition = focusObjectPosition;
-    let cameraPosition = sunCameraPosition;
-    switch (focus.type) {
-      case "planet":
-        lookAtPosition = getFuturePosition(
-          focus.data.xRadius,
-          focus.data.zRadius,
-          focus.data.daysPerRotation,
-          focus.data.objectRef.current?.angle || 0,
-          animationDuration,
-        );
-        cameraPosition = calculatePlanetCameraPosition(
-          lookAtPosition,
-          focus.data.size,
-          new Vector3(0, 0, 0),
-          focus.data.xRadius,
-        );
-        break;
-      case "moon":
-        cameraPosition = calculatePlanetCameraPosition(
-          lookAtPosition,
-          focus.parent.data.size,
-          focus.parent.data.objectRef.current.position,
-          focus.parent.data.xRadius,
-        );
-        break;
-      case "sun":
-      default:
-    }
+    let cameraPosition = getCameraPosition(focus);
 
     // start the camera animation
-    const previousFocusPosition = getObjectsPosition(previousFocus);
     api.start({
-      focusPosition: lookAtPosition.toArray(),
+      focusPosition: focusObjectPosition.toArray(),
       cameraPosition: cameraPosition.toArray(),
       from: {
         focusPosition: previousFocusPosition.toArray(),
@@ -86,9 +56,11 @@ export default function Controls() {
       if (springs.focusPosition.isAnimating) {
         const cameraPos = springs.cameraPosition.get();
         camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
+        springs.cameraPosition.update(getCameraPosition(focus).toArray());
 
         const pos = springs.focusPosition.get();
         camera.lookAt(pos[0], pos[1], pos[2]);
+        springs.focusPosition.update(getObjectsPosition(focus).toArray());
       } else {
         const cameraPosition = getCameraPosition(focus);
         camera.position.copy(cameraPosition);
@@ -120,10 +92,7 @@ function getObjectsPosition(focus) {
   if (focus.type === "sun") {
     return sunFocusPosition;
   }
-  if (focus.type === "planet") {
-    return focus.data.objectRef.current.position;
-  }
-  if (focus.type === "moon") {
+  if (focus.type === "planet" || focus.type === "moon") {
     const position = new Vector3();
     focus.data.objectRef.current.getWorldPosition(position);
     return position;
@@ -164,9 +133,9 @@ function getCameraPosition(focus) {
     const moonPosition = getObjectsPosition(focus);
     return calculatePlanetCameraPosition(
       moonPosition,
-      focus.parent.data.size,
+      focus.data.size,
       focus.parent.data.objectRef.current.position,
-      focus.parent.data.xRadius,
+      focus.data.radius,
     );
   }
 
