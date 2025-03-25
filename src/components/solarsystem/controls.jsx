@@ -7,7 +7,8 @@ import { Vector3 } from "three";
 import { speedInDaysPerSecond } from "./data";
 import { usePrevious } from "ahooks";
 
-const sunCameraPosition = new Vector3(0, 20, 140);
+const sunCameraPosition = new Vector3(0, 100, 150);
+const sunFocusPosition = new Vector3(0, 0, 20);
 
 export default function Controls() {
   const focus = useFocus();
@@ -18,7 +19,7 @@ export default function Controls() {
   const animationDuration = 1000;
   const [springs, api] = useSpring(() => ({
     focusPosition: [0, 0, 0],
-    cameraPosition: sunCameraPosition,
+    cameraPosition: camera.position.toArray(),
     config: {
       precision: 0.0001,
       duration: animationDuration,
@@ -74,7 +75,7 @@ export default function Controls() {
       focusPosition: lookAtPosition.toArray(),
       cameraPosition: cameraPosition.toArray(),
       from: {
-        focusPosition: previousFocusPosition.toArray() || [0, 0, 0],
+        focusPosition: previousFocusPosition.toArray(),
         cameraPosition: camera.position.toArray(),
       },
     });
@@ -116,6 +117,9 @@ export default function Controls() {
  * @returns {Vector3} The position of the object. Returns (0, 0, 0) if the type is unrecognized.
  */
 function getObjectsPosition(focus) {
+  if (focus.type === "sun") {
+    return sunFocusPosition;
+  }
   if (focus.type === "planet") {
     return focus.data.objectRef.current.position;
   }

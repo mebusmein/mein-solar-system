@@ -13,7 +13,7 @@ function SolarSystem() {
   const theme = useTheme();
 
   return (
-    <Canvas camera={{ position: [0, 20, 90], fov: 45 }}>
+    <Canvas camera={{ position: [0, 100, 150], fov: 45 }}>
       <Sun color={theme.sunColor} />
       {solPlanets.map((planet) => (
         <Planet key={planet.id} planet={{ ...planet }} />
