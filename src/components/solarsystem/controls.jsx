@@ -26,13 +26,13 @@ export default function Controls() {
   }));
 
   const focusRef = useRef();
-
   const previousFocus = usePrevious(focus);
 
   useEffect(() => {
     // set internal focusRef to the current objectRef
     focusRef.current = focus.data?.objectRef?.current;
     if (!focusRef.current) return;
+    if (previousFocus?.data?.objectRef?.current === focusRef.current) return;
 
     let futurePlanetPosition;
     let lookAtPosition;
